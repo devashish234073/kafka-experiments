@@ -1,91 +1,243 @@
 AWSTemplateFormatVersion: '2010-09-09'
-ImageId: ami-0c2b8ca1dad447f8a
-SubnetId: !Ref PublicSubnet
-SecurityGroupIds: [!Ref InstanceSG]
-UserData:
-Fn::Base64: !Sub |
-#!/bin/bash
-yum update -y
-yum install -y java-1.8.0-openjdk git wget tar maven
+Description: Kafka Cluster – Three EC2 brokers running Apache Kafka 4.x in KRaft mode
+
+Parameters:
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 KeyPair to enable SSH access
+
+Resources:
+  MyVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: MyVPC
+
+  MyInternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref MyVPC
+      InternetGatewayId: !Ref MyInternetGateway
+
+  MyPublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 10.0.0.0/24
+      MapPublicIpOnLaunch: true
+
+  MyRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref MyVPC
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref MyRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref MyInternetGateway
+
+  SubnetAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref MyPublicSubnet
+      RouteTableId: !Ref MyRouteTable
+
+  KafkaSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow Kafka traffic & SSH
+      VpcId: !Ref MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+        # Kafka brokers
+        - IpProtocol: tcp
+          FromPort: 9092
+          ToPort: 9094
+          CidrIp: 10.0.0.0/16
+
+        # KRaft quorum ports
+        - IpProtocol: tcp
+          FromPort: 29092
+          ToPort: 29094
+          CidrIp: 10.0.0.0/16
+
+      Tags:
+        - Key: Name
+          Value: KafkaSG
+
+  ############################
+  #   BROKER USER-DATA BASE  #
+  ############################
+
+  KafkaUserData1:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        ImageId: ami-03f4878755434977f
+        InstanceType: t3.small
+        KeyName: !Ref KeyName
+        SecurityGroupIds: [!Ref KafkaSG]
+        UserData:
+          Fn::Base64: |
+            #!/bin/bash
+            set -eux
+
+            apt-get update
+            apt-get install -y openjdk-17-jdk wget tar netcat
+
+            cd /opt
+            wget https://downloads.apache.org/kafka/4.1.1/kafka_2.13-4.1.1.tgz
+            tar -xzf kafka_2.13-4.1.1.tgz
+            mv kafka_2.13-4.1.1 kafka
+
+            KAFKA_HOME=/opt/kafka
+
+            CLUSTER_ID=$($KAFKA_HOME/bin/kafka-storage.sh random-uuid)
+
+            cat > $KAFKA_HOME/config/kraft/server.properties <<EOF
+            process.roles=broker,controller
+            node.id=1
+            controller.quorum.voters=1@10.0.0.10:29092,2@10.0.0.11:29093,3@10.0.0.12:29094
+            listeners=PLAINTEXT://10.0.0.10:9092,CONTROLLER://10.0.0.10:29092
+            log.dirs=/tmp/kraft-combined-logs
+            EOF
+
+            $KAFKA_HOME/bin/kafka-storage.sh format -t $CLUSTER_ID -c $KAFKA_HOME/config/kraft/server.properties
+
+            nohup $KAFKA_HOME/bin/kafka-server-start.sh $KAFKA_HOME/config/kraft/server.properties >/var/log/kafka.log 2>&1 &
 
 
-cd /opt
-wget https://archive.apache.org/dist/kafka/3.2.0/kafka_2.12-3.2.0.tgz
-tar -xzf kafka_2.12-3.2.0.tgz
+  KafkaUserData2:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        ImageId: ami-03f4878755434977f
+        InstanceType: t3.small
+        KeyName: !Ref KeyName
+        SecurityGroupIds: [!Ref KafkaSG]
+        UserData:
+          Fn::Base64: |
+            #!/bin/bash
+            set -eux
+
+            apt-get update
+            apt-get install -y openjdk-17-jdk wget tar netcat
+
+            cd /opt
+            wget https://downloads.apache.org/kafka/4.1.1/kafka_2.13-4.1.1.tgz
+            tar -xzf kafka_2.13-4.1.1.tgz
+            mv kafka_2.13-4.1.1 kafka
+
+            KAFKA_HOME=/opt/kafka
+
+            CLUSTER_ID=$($KAFKA_HOME/bin/kafka-storage.sh random-uuid)
+
+            cat > $KAFKA_HOME/config/kraft/server.properties <<EOF
+            process.roles=broker,controller
+            node.id=2
+            controller.quorum.voters=1@10.0.0.10:29092,2@10.0.0.11:29093,3@10.0.0.12:29094
+            listeners=PLAINTEXT://10.0.0.11:9093,CONTROLLER://10.0.0.11:29093
+            log.dirs=/tmp/kraft-combined-logs
+            EOF
+
+            $KAFKA_HOME/bin/kafka-storage.sh format -t $CLUSTER_ID -c $KAFKA_HOME/config/kraft/server.properties
+
+            nohup $KAFKA_HOME/bin/kafka-server-start.sh $KAFKA_HOME/config/kraft/server.properties >/var/log/kafka.log 2>&1 &
 
 
-mv kafka_2.12-3.2.0 kafka
+  KafkaUserData3:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        ImageId: ami-03f4878755434977f
+        InstanceType: t3.small
+        KeyName: !Ref KeyName
+        SecurityGroupIds: [!Ref KafkaSG]
+        UserData:
+          Fn::Base64: |
+            #!/bin/bash
+            set -eux
+
+            apt-get update
+            apt-get install -y openjdk-17-jdk wget tar netcat
+
+            cd /opt
+            wget https://downloads.apache.org/kafka/4.1.1/kafka_2.13-4.1.1.tgz
+            tar -xzf kafka_2.13-4.1.1.tgz
+            mv kafka_2.13-4.1.1 kafka
+
+            KAFKA_HOME=/opt/kafka
+            CLUSTER_ID=$($KAFKA_HOME/bin/kafka-storage.sh random-uuid)
+
+            cat > $KAFKA_HOME/config/kraft/server.properties <<EOF
+            process.roles=broker,controller
+            node.id=3
+            controller.quorum.voters=1@10.0.0.10:29092,2@10.0.0.11:29093,3@10.0.0.12:29094
+            listeners=PLAINTEXT://10.0.0.12:9094,CONTROLLER://10.0.0.12:29094
+            log.dirs=/tmp/kraft-combined-logs
+            EOF
+
+            $KAFKA_HOME/bin/kafka-storage.sh format -t $CLUSTER_ID -c $KAFKA_HOME/config/kraft/server.properties
+
+            nohup $KAFKA_HOME/bin/kafka-server-start.sh $KAFKA_HOME/config/kraft/server.properties >/var/log/kafka.log 2>&1 &
 
 
-cd kafka
-nohup bin/zookeeper-server-start.sh config/zookeeper.properties &
-sleep 10
-nohup bin/kafka-server-start.sh config/server.properties &
+  ##########################
+  #   BROKER INSTANCES     #
+  ##########################
 
+  Broker1:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref KafkaUserData1
+        Version: !GetAtt KafkaUserData1.LatestVersionNumber
+      SubnetId: !Ref MyPublicSubnet
+      PrivateIpAddress: 10.0.0.10
+      Tags:
+        - Key: Name
+          Value: kafka-broker-1
 
-echo "Kafka broker started"
+  Broker2:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref KafkaUserData2
+        Version: !GetAtt KafkaUserData2.LatestVersionNumber
+      SubnetId: !Ref MyPublicSubnet
+      PrivateIpAddress: 10.0.0.11
+      Tags:
+        - Key: Name
+          Value: kafka-broker-2
 
-
-ProducerInstance:
-Type: AWS::EC2::Instance
-DependsOn: KafkaInstance
-Properties:
-InstanceType: t3.small
-KeyName: !Ref KeyPair
-ImageId: ami-0c2b8ca1dad447f8a
-SubnetId: !Ref PublicSubnet
-SecurityGroupIds: [!Ref InstanceSG]
-UserData:
-Fn::Base64: !Sub |
-#!/bin/bash
-yum update -y
-yum install -y java-17-amazon-corretto git maven
-
-
-cd /home/ec2-user
-git clone https://github.com/devashish234073/kafka-experiments
-cd kafka-experiments/producer
-
-
-sed -i "s|localhost:9092|${KafkaInstance.PrivateIp}:9092|g" src/main/resources/application.properties
-
-
-nohup mvn spring-boot:run &
-echo "Producer started"
-
-
-ConsumerInstance:
-Type: AWS::EC2::Instance
-DependsOn: KafkaInstance
-Properties:
-InstanceType: t3.small
-KeyName: !Ref KeyPair
-ImageId: ami-0c2b8ca1dad447f8a
-SubnetId: !Ref PublicSubnet
-SecurityGroupIds: [!Ref InstanceSG]
-UserData:
-Fn::Base64: !Sub |
-#!/bin/bash
-yum update -y
-yum install -y java-17-amazon-corretto git maven
-
-
-cd /home/ec2-user
-git clone https://github.com/devashish234073/kafka-experiments
-cd kafka-experiments/consumer
-
-
-sed -i "s|localhost:9092|${KafkaInstance.PrivateIp}:9092|g" src/main/resources/application.properties
-
-
-nohup mvn spring-boot:run &
-echo "Consumer started"
-
+  Broker3:
+    Type: AWS::EC2::Instance
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref KafkaUserData3
+        Version: !GetAtt KafkaUserData3.LatestVersionNumber
+      SubnetId: !Ref MyPublicSubnet
+      PrivateIpAddress: 10.0.0.12
+      Tags:
+        - Key: Name
+          Value: kafka-broker-3
 
 Outputs:
-KafkaPublicIP:
-Value: !GetAtt KafkaInstance.PublicIp
-ProducerPublicIP:
-Value: !GetAtt ProducerInstance.PublicIp
-ConsumerPublicIP:
-Value: !GetAtt ConsumerInstance.PublicIp
+  Broker1IP:
+    Value: !GetAtt Broker1.PrivateIp
+  Broker2IP:
+    Value: !GetAtt Broker2.PrivateIp
+  Broker3IP:
+    Value: !GetAtt Broker3.PrivateIp
