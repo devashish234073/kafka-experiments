@@ -127,6 +127,8 @@ Resources:
 
             CLUSTER_ID=$($KAFKA_HOME/bin/kafka-storage.sh random-uuid)
 
+            mkdir -p $KAFKA_HOME/config/kraft
+
             cat > $KAFKA_HOME/config/kraft/server.properties <<EOF
             process.roles=broker,controller
             node.id=1
@@ -162,8 +164,9 @@ Resources:
             mv kafka_2.13-4.1.1 kafka
 
             KAFKA_HOME=/opt/kafka
-
             CLUSTER_ID=$($KAFKA_HOME/bin/kafka-storage.sh random-uuid)
+
+            mkdir -p $KAFKA_HOME/config/kraft
 
             cat > $KAFKA_HOME/config/kraft/server.properties <<EOF
             process.roles=broker,controller
@@ -201,6 +204,8 @@ Resources:
 
             KAFKA_HOME=/opt/kafka
             CLUSTER_ID=$($KAFKA_HOME/bin/kafka-storage.sh random-uuid)
+
+            mkdir -p $KAFKA_HOME/config/kraft
 
             cat > $KAFKA_HOME/config/kraft/server.properties <<EOF
             process.roles=broker,controller
@@ -348,3 +353,9 @@ Outputs:
   ConsumerInstanceIP:
     Value: !GetAtt ConsumerInstance.PublicIp
     Description: Consumer Instance Public IP
+  ProducerUIURL:
+    Value: !Sub 'http://${ProducerInstance.PublicIp}:8080'
+    Description: Producer UI URL - send messages here
+  ConsumerUIURL:
+    Value: !Sub 'http://${ConsumerInstance.PublicIp}:8080'
+    Description: Consumer UI URL - view received messages here
