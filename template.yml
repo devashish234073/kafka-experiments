@@ -343,8 +343,8 @@ Outputs:
   Broker3IP:
     Value: !GetAtt Broker3.PrivateIp
   ProducerInstanceIP:
-    Value: !GetAtt ProducerInstance.PublicIpAddress
+    Value: !GetAtt ProducerInstance.PublicIp
     Description: Producer Instance Public IP
   ConsumerInstanceIP:
-    Value: !GetAtt ConsumerInstance.PublicIpAddress
+    Value: !GetAtt ConsumerInstance.PublicIp
     Description: Consumer Instance Public IP
