@@ -56,9 +56,16 @@ Resources:
       GroupDescription: Allow Kafka traffic & SSH
       VpcId: !Ref MyVPC
       SecurityGroupIngress:
+        # SSH
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+        # HTTP Log Server
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
           CidrIp: 0.0.0.0/0
 
         # Kafka brokers
@@ -116,7 +123,13 @@ Resources:
             set -eux
 
             yum update -y
-            yum install -y java-17-amazon-corretto wget tar nmap-ncat
+            yum install -y java-17-amazon-corretto wget tar nmap-ncat python3
+
+            # Start HTTP server for logs before Kafka setup
+            mkdir -p /var/log
+            cd /var/log
+            nohup python3 -m http.server 8000 > /var/log/http-server.log 2>&1 &
+            echo "HTTP log server started on port 8000"
 
             cd /opt
             wget https://downloads.apache.org/kafka/4.1.1/kafka_2.13-4.1.1.tgz
@@ -156,7 +169,13 @@ Resources:
             set -eux
 
             yum update -y
-            yum install -y java-17-amazon-corretto wget tar nmap-ncat
+            yum install -y java-17-amazon-corretto wget tar nmap-ncat python3
+
+            # Start HTTP server for logs before Kafka setup
+            mkdir -p /var/log
+            cd /var/log
+            nohup python3 -m http.server 8000 > /var/log/http-server.log 2>&1 &
+            echo "HTTP log server started on port 8000"
 
             cd /opt
             wget https://downloads.apache.org/kafka/4.1.1/kafka_2.13-4.1.1.tgz
@@ -195,7 +214,13 @@ Resources:
             set -eux
 
             yum update -y
-            yum install -y java-17-amazon-corretto wget tar nmap-ncat
+            yum install -y java-17-amazon-corretto wget tar nmap-ncat python3
+
+            # Start HTTP server for logs before Kafka setup
+            mkdir -p /var/log
+            cd /var/log
+            nohup python3 -m http.server 8000 > /var/log/http-server.log 2>&1 &
+            echo "HTTP log server started on port 8000"
 
             cd /opt
             wget https://downloads.apache.org/kafka/4.1.1/kafka_2.13-4.1.1.tgz
@@ -359,3 +384,12 @@ Outputs:
   ConsumerUIURL:
     Value: !Sub 'http://${ConsumerInstance.PublicIp}:8080'
     Description: Consumer UI URL - view received messages here
+  Broker1LogURL:
+    Value: !Sub 'http://${Broker1.PublicIp}:8000'
+    Description: Broker 1 Log Server - browse logs from /var/log
+  Broker2LogURL:
+    Value: !Sub 'http://${Broker2.PublicIp}:8000'
+    Description: Broker 2 Log Server - browse logs from /var/log
+  Broker3LogURL:
+    Value: !Sub 'http://${Broker3.PublicIp}:8000'
+    Description: Broker 3 Log Server - browse logs from /var/log
