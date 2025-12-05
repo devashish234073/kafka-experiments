@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: '2010-09-09'
+ImageId: ami-0c2b8ca1dad447f8a
+SubnetId: !Ref PublicSubnet
+SecurityGroupIds: [!Ref InstanceSG]
+UserData:
+Fn::Base64: !Sub |
+#!/bin/bash
+yum update -y
+yum install -y java-1.8.0-openjdk git wget tar maven
+
+
+cd /opt
+wget https://archive.apache.org/dist/kafka/3.2.0/kafka_2.12-3.2.0.tgz
+tar -xzf kafka_2.12-3.2.0.tgz
+
+
+mv kafka_2.12-3.2.0 kafka
+
+
+cd kafka
+nohup bin/zookeeper-server-start.sh config/zookeeper.properties &
+sleep 10
+nohup bin/kafka-server-start.sh config/server.properties &
+
+
+echo "Kafka broker started"
+
+
+ProducerInstance:
+Type: AWS::EC2::Instance
+DependsOn: KafkaInstance
+Properties:
+InstanceType: t3.small
+KeyName: !Ref KeyPair
+ImageId: ami-0c2b8ca1dad447f8a
+SubnetId: !Ref PublicSubnet
+SecurityGroupIds: [!Ref InstanceSG]
+UserData:
+Fn::Base64: !Sub |
+#!/bin/bash
+yum update -y
+yum install -y java-17-amazon-corretto git maven
+
+
+cd /home/ec2-user
+git clone https://github.com/devashish234073/kafka-experiments
+cd kafka-experiments/producer
+
+
+sed -i "s|localhost:9092|${KafkaInstance.PrivateIp}:9092|g" src/main/resources/application.properties
+
+
+nohup mvn spring-boot:run &
+echo "Producer started"
+
+
+ConsumerInstance:
+Type: AWS::EC2::Instance
+DependsOn: KafkaInstance
+Properties:
+InstanceType: t3.small
+KeyName: !Ref KeyPair
+ImageId: ami-0c2b8ca1dad447f8a
+SubnetId: !Ref PublicSubnet
+SecurityGroupIds: [!Ref InstanceSG]
+UserData:
+Fn::Base64: !Sub |
+#!/bin/bash
+yum update -y
+yum install -y java-17-amazon-corretto git maven
+
+
+cd /home/ec2-user
+git clone https://github.com/devashish234073/kafka-experiments
+cd kafka-experiments/consumer
+
+
+sed -i "s|localhost:9092|${KafkaInstance.PrivateIp}:9092|g" src/main/resources/application.properties
+
+
+nohup mvn spring-boot:run &
+echo "Consumer started"
+
+
+Outputs:
+KafkaPublicIP:
+Value: !GetAtt KafkaInstance.PublicIp
+ProducerPublicIP:
+Value: !GetAtt ProducerInstance.PublicIp
+ConsumerPublicIP:
+Value: !GetAtt ConsumerInstance.PublicIp
