@@ -77,6 +77,27 @@ Resources:
         - Key: Name
           Value: KafkaSG
 
+  AppInstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH and outbound to Kafka
+      VpcId: !Ref MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: AppInstanceSG
+
   ############################
   #   BROKER USER-DATA BASE  #
   ############################
@@ -85,7 +106,7 @@ Resources:
     Type: AWS::EC2::LaunchTemplate
     Properties:
       LaunchTemplateData:
-        ImageId: ami-03f4878755434977f
+        ImageId: ami-0d176f79571d18a8f
         InstanceType: t3.small
         KeyName: !Ref KeyName
         SecurityGroupIds: [!Ref KafkaSG]
@@ -94,8 +115,8 @@ Resources:
             #!/bin/bash
             set -eux
 
-            apt-get update
-            apt-get install -y openjdk-17-jdk wget tar netcat
+            yum update -y
+            yum install -y java-17-amazon-corretto wget tar nmap-ncat
 
             cd /opt
             wget https://downloads.apache.org/kafka/4.1.1/kafka_2.13-4.1.1.tgz
@@ -123,7 +144,7 @@ Resources:
     Type: AWS::EC2::LaunchTemplate
     Properties:
       LaunchTemplateData:
-        ImageId: ami-03f4878755434977f
+        ImageId: ami-0d176f79571d18a8f
         InstanceType: t3.small
         KeyName: !Ref KeyName
         SecurityGroupIds: [!Ref KafkaSG]
@@ -132,8 +153,8 @@ Resources:
             #!/bin/bash
             set -eux
 
-            apt-get update
-            apt-get install -y openjdk-17-jdk wget tar netcat
+            yum update -y
+            yum install -y java-17-amazon-corretto wget tar nmap-ncat
 
             cd /opt
             wget https://downloads.apache.org/kafka/4.1.1/kafka_2.13-4.1.1.tgz
@@ -161,7 +182,7 @@ Resources:
     Type: AWS::EC2::LaunchTemplate
     Properties:
       LaunchTemplateData:
-        ImageId: ami-03f4878755434977f
+        ImageId: ami-0d176f79571d18a8f
         InstanceType: t3.small
         KeyName: !Ref KeyName
         SecurityGroupIds: [!Ref KafkaSG]
@@ -170,8 +191,8 @@ Resources:
             #!/bin/bash
             set -eux
 
-            apt-get update
-            apt-get install -y openjdk-17-jdk wget tar netcat
+            yum update -y
+            yum install -y java-17-amazon-corretto wget tar nmap-ncat
 
             cd /opt
             wget https://downloads.apache.org/kafka/4.1.1/kafka_2.13-4.1.1.tgz
@@ -234,6 +255,86 @@ Resources:
         - Key: Name
           Value: kafka-broker-3
 
+  ##########################
+  #   PRODUCER INSTANCE    #
+  ##########################
+
+  ProducerInstance:
+    Type: AWS::EC2::Instance
+    DependsOn: Broker1
+    Properties:
+      InstanceType: t3.small
+      KeyName: !Ref KeyName
+      ImageId: ami-0d176f79571d18a8f
+      SubnetId: !Ref MyPublicSubnet
+      SecurityGroupIds:
+        - !Ref AppInstanceSG
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -eux
+          
+          yum update -y
+          yum install -y java-17-amazon-corretto git maven nmap-ncat
+
+          HOME_DIR=/home/ec2-user
+          if [ -d /home/ubuntu ]; then HOME_DIR=/home/ubuntu; fi
+
+          cd $HOME_DIR
+          git clone https://github.com/devashish234073/kafka-experiments
+          cd kafka-experiments/producer
+          
+          sed -i "s|localhost:9092|10.0.0.10:9092,10.0.0.11:9093,10.0.0.12:9094|g" src/main/resources/application.properties
+
+          # wait for broker to be reachable
+          until nc -z 10.0.0.10 9092; do sleep 5; done
+
+          nohup mvn spring-boot:run > /var/log/producer.log 2>&1 &
+          echo "Producer started"
+      Tags:
+        - Key: Name
+          Value: kafka-producer
+
+  ##########################
+  #   CONSUMER INSTANCE    #
+  ##########################
+
+  ConsumerInstance:
+    Type: AWS::EC2::Instance
+    DependsOn: Broker1
+    Properties:
+      InstanceType: t3.small
+      KeyName: !Ref KeyName
+      ImageId: ami-0d176f79571d18a8f
+      SubnetId: !Ref MyPublicSubnet
+      SecurityGroupIds:
+        - !Ref AppInstanceSG
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -eux
+          
+          yum update -y
+          yum install -y java-17-amazon-corretto git maven nmap-ncat
+
+          HOME_DIR=/home/ec2-user
+          if [ -d /home/ubuntu ]; then HOME_DIR=/home/ubuntu; fi
+
+          cd $HOME_DIR
+          git clone https://github.com/devashish234073/kafka-experiments
+          cd kafka-experiments/consumer
+          
+          sed -i "s|localhost:9092|10.0.0.10:9092,10.0.0.11:9093,10.0.0.12:9094|g" src/main/resources/application.properties
+
+          # wait for broker to be reachable
+          until nc -z 10.0.0.10 9092; do sleep 5; done
+
+          nohup mvn spring-boot:run > /var/log/consumer.log 2>&1 &
+          echo "Consumer started"
+      Tags:
+        - Key: Name
+          Value: kafka-consumer
+
 Outputs:
   Broker1IP:
     Value: !GetAtt Broker1.PrivateIp
@@ -241,3 +342,9 @@ Outputs:
     Value: !GetAtt Broker2.PrivateIp
   Broker3IP:
     Value: !GetAtt Broker3.PrivateIp
+  ProducerInstanceIP:
+    Value: !GetAtt ProducerInstance.PublicIpAddress
+    Description: Producer Instance Public IP
+  ConsumerInstanceIP:
+    Value: !GetAtt ConsumerInstance.PublicIpAddress
+    Description: Consumer Instance Public IP
