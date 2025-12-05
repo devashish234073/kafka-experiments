@@ -19,6 +19,10 @@ that is handy for debugging startup logs without doing ssh to instance:
 
 <img width="689" height="235" alt="image" src="https://github.com/user-attachments/assets/aa72e47a-9f63-4ac7-ad76-99090b219b4b" />
 
+This is how it looks for one of the broker:
+
+<img width="917" height="820" alt="image" src="https://github.com/user-attachments/assets/a7faf640-f882-4dd5-8efb-3ae83dfc066d" />
+
 
 
 
