@@ -2,3 +2,23 @@
 
 This is a starter project for kafka just lauch the template.yml in cloudformation and it will set up the instances necessary.
 
+Once deployed the cft's output will have details like this:
+
+<img width="1582" height="694" alt="image" src="https://github.com/user-attachments/assets/7907def7-c922-4cba-843e-d7ed857761a4" />
+
+THe producer url will take you to a UI like this:
+
+<img width="775" height="332" alt="image" src="https://github.com/user-attachments/assets/c9b9a5da-c18d-4980-8bce-4f81f8ed3eb8" />
+
+And the consumer url to this:
+
+<img width="700" height="385" alt="image" src="https://github.com/user-attachments/assets/b2e42203-a3fd-4638-ac10-81db22ccf264" />
+
+Even for the three broker endpoints links are there that is for http server running on port 8080 for the /var/log of the ec2 instance
+that is handy for debugging startup logs without doing ssh to instance:
+
+<img width="689" height="235" alt="image" src="https://github.com/user-attachments/assets/aa72e47a-9f63-4ac7-ad76-99090b219b4b" />
+
+
+
+
