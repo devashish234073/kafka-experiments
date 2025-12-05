@@ -138,7 +138,7 @@ Resources:
 
             KAFKA_HOME=/opt/kafka
 
-            CLUSTER_ID=$($KAFKA_HOME/bin/kafka-storage.sh random-uuid)
+            CLUSTER_ID=MkVmYjgzNWZkYzYyNDM2MWU3Mw
 
             mkdir -p $KAFKA_HOME/config/kraft
 
@@ -185,7 +185,7 @@ Resources:
             mv kafka_2.13-4.1.1 kafka
 
             KAFKA_HOME=/opt/kafka
-            CLUSTER_ID=$($KAFKA_HOME/bin/kafka-storage.sh random-uuid)
+            CLUSTER_ID=MkVmYjgzNWZkYzYyNDM2MWU3Mw
 
             mkdir -p $KAFKA_HOME/config/kraft
 
@@ -232,7 +232,7 @@ Resources:
             mv kafka_2.13-4.1.1 kafka
 
             KAFKA_HOME=/opt/kafka
-            CLUSTER_ID=$($KAFKA_HOME/bin/kafka-storage.sh random-uuid)
+            CLUSTER_ID=MkVmYjgzNWZkYzYyNDM2MWU3Mw
 
             mkdir -p $KAFKA_HOME/config/kraft
 
