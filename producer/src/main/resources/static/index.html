@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Producer UI</title>
+  </head>
+  <body>
+    <h1>Kafka Producer</h1>
+    <form id="sendForm">
+      <input type="text" id="msg" placeholder="Message" size="60" />
+      <button type="submit">Send</button>
+    </form>
+    <pre id="result"></pre>
+
+    <script>
+      const form = document.getElementById('sendForm');
+      const result = document.getElementById('result');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById('msg').value;
+        if (!msg) return;
+        try {
+          const resp = await fetch(`/send?msg=${encodeURIComponent(msg)}`);
+          const text = await resp.text();
+          result.textContent = text;
+        } catch (err) {
+          result.textContent = 'Error: ' + err;
+        }
+      });
+    </script>
+  </body>
+</html>

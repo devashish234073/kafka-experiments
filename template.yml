@@ -286,8 +286,8 @@ Resources:
           
           sed -i "s|localhost:9092|10.0.0.10:9092,10.0.0.11:9093,10.0.0.12:9094|g" src/main/resources/application.properties
 
-          # wait for broker to be reachable
-          until nc -z 10.0.0.10 9092; do sleep 5; done
+          # wait for all brokers to be reachable (ports may differ)
+          until nc -z 10.0.0.10 9092 && nc -z 10.0.0.11 9093 && nc -z 10.0.0.12 9094; do sleep 5; done
 
           nohup mvn spring-boot:run > /var/log/producer.log 2>&1 &
           echo "Producer started"
@@ -326,8 +326,8 @@ Resources:
           
           sed -i "s|localhost:9092|10.0.0.10:9092,10.0.0.11:9093,10.0.0.12:9094|g" src/main/resources/application.properties
 
-          # wait for broker to be reachable
-          until nc -z 10.0.0.10 9092; do sleep 5; done
+          # wait for all brokers to be reachable (ports may differ)
+          until nc -z 10.0.0.10 9092 && nc -z 10.0.0.11 9093 && nc -z 10.0.0.12 9094; do sleep 5; done
 
           nohup mvn spring-boot:run > /var/log/consumer.log 2>&1 &
           echo "Consumer started"

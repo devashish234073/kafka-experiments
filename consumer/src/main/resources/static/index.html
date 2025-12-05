@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Consumer UI</title>
+    <style>body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;margin:16px;} pre{white-space:pre-wrap;}</style>
+  </head>
+  <body>
+    <h1>Kafka Consumer</h1>
+    <p>Last messages (most recent first):</p>
+    <div id="messages">Loading...</div>
+
+    <script>
+      async function fetchMessages() {
+        try {
+          const resp = await fetch('/messages');
+          const data = await resp.json();
+          const el = document.getElementById('messages');
+          if (!data || data.length === 0) {
+            el.textContent = 'No messages yet';
+            return;
+          }
+          el.innerHTML = data.map(m => '<pre>' + m + '</pre>').join('\n');
+        } catch (err) {
+          document.getElementById('messages').textContent = 'Error: ' + err;
+        }
+      }
+      fetchMessages();
+      setInterval(fetchMessages, 3000);
+    </script>
+  </body>
+</html>
