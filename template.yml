@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Kafka Cluster – Three EC2 brokers running Apache Kafka 4.x in KRaft mode
+Description: "Kafka Cluster - Three EC2 brokers running Apache Kafka 4.x in KRaft mode"
 
 Parameters:
   KeyName:
