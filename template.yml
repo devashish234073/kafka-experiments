@@ -148,6 +148,7 @@ Resources:
             controller.quorum.voters=1@10.0.0.10:29092,2@10.0.0.11:29093,3@10.0.0.12:29094
             listeners=PLAINTEXT://10.0.0.10:9092,CONTROLLER://10.0.0.10:29092
             listener.security.protocol.map=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+            controller.listener.names=CONTROLLER
             log.dirs=/tmp/kraft-combined-logs
             EOF
 
@@ -194,6 +195,7 @@ Resources:
             controller.quorum.voters=1@10.0.0.10:29092,2@10.0.0.11:29093,3@10.0.0.12:29094
             listeners=PLAINTEXT://10.0.0.11:9093,CONTROLLER://10.0.0.11:29093
             listener.security.protocol.map=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+            controller.listener.names=CONTROLLER
             log.dirs=/tmp/kraft-combined-logs
             EOF
 
@@ -240,6 +242,7 @@ Resources:
             controller.quorum.voters=1@10.0.0.10:29092,2@10.0.0.11:29093,3@10.0.0.12:29094
             listeners=PLAINTEXT://10.0.0.12:9094,CONTROLLER://10.0.0.12:29094
             listener.security.protocol.map=PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+            controller.listener.names=CONTROLLER
             log.dirs=/tmp/kraft-combined-logs
             EOF
 
