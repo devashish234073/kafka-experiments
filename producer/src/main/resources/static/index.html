@@ -1,80 +1,129 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Producer UI</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; }
-        .section { margin-top: 20px; border: 1px solid #ccc; padding: 10px; border-radius: 5px; }
-        .success { color: green; }
-        .error { color: red; }
-    </style>
-  </head>
-  <body>
-    <h1>Kafka Producer</h1>
-    
-    <div class="section">
-        <h2>Send Message</h2>
-        <form id="sendForm">
-          <input type="text" id="msg" placeholder="Message" size="60" />
-          <button type="submit">Send</button>
-        </form>
-        <pre id="result"></pre>
-    </div>
 
-    <div class="section">
-        <h2>Cluster Health</h2>
-        <button onclick="checkHealth()">Check Health</button>
-        <pre id="healthResult"></pre>
-    </div>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Producer UI</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
 
-    <div class="section">
-        <h2>Cluster Info</h2>
-        <button onclick="getClusterInfo()">Get Info</button>
-        <pre id="infoResult"></pre>
-    </div>
+    .section {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+    }
 
-    <script>
-      const form = document.getElementById('sendForm');
-      const result = document.getElementById('result');
-      
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const msg = document.getElementById('msg').value;
-        if (!msg) return;
-        try {
-          const resp = await fetch(`/send?msg=${encodeURIComponent(msg)}`);
-          const text = await resp.text();
-          result.textContent = text;
-        } catch (err) {
-          result.textContent = 'Error: ' + err;
-        }
-      });
+    .success {
+      color: green;
+    }
 
-      async function checkHealth() {
-          const el = document.getElementById('healthResult');
-          el.textContent = 'Checking...';
-          try {
-              const resp = await fetch('/cluster/health');
-              const data = await resp.json();
-              el.textContent = JSON.stringify(data, null, 2);
-          } catch (err) {
-              el.textContent = 'Error: ' + err;
-          }
+    .error {
+      color: red;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Kafka Producer</h1>
+
+  <div class="section">
+    <h2>Send Message</h2>
+    <form id="sendForm">
+      <input type="text" id="msg" placeholder="Message" size="60" />
+      <button type="submit">Send</button>
+    </form>
+    <pre id="result"></pre>
+  </div>
+
+  <div class="section">
+    <h2>Cluster Health</h2>
+    <button onclick="checkHealth()">Check Health</button>
+    <pre id="healthResult"></pre>
+  </div>
+
+  <div class="section">
+    <h2>Cluster Info</h2>
+    <button onclick="getClusterInfo()">Get Info</button>
+    <pre id="infoResult"></pre>
+  </div>
+
+  <div class="section">
+    <h2>Stream Control (Experiment)</h2>
+    <button onclick="startStream()">Start Stream</button>
+    <button onclick="stopStream()">Stop Stream</button>
+    <pre id="streamResult"></pre>
+  </div>
+
+  <script>
+    const form = document.getElementById('sendForm');
+    const result = document.getElementById('result');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('msg').value;
+      if (!msg) return;
+      try {
+        const resp = await fetch(`/send?msg=${encodeURIComponent(msg)}`);
+        const text = await resp.text();
+        result.textContent = text;
+      } catch (err) {
+        result.textContent = 'Error: ' + err;
       }
+    });
 
-      async function getClusterInfo() {
-          const el = document.getElementById('infoResult');
-          el.textContent = 'Fetching...';
-          try {
-              const resp = await fetch('/cluster/info');
-              const data = await resp.json();
-              el.textContent = JSON.stringify(data, null, 2);
-          } catch (err) {
-              el.textContent = 'Error: ' + err;
-          }
+    async function checkHealth() {
+      const el = document.getElementById('healthResult');
+      el.textContent = 'Checking...';
+      try {
+        const resp = await fetch('/cluster/health');
+        const data = await resp.json();
+        el.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        el.textContent = 'Error: ' + err;
       }
-    </script>
-  </body>
+    }
+
+    async function getClusterInfo() {
+      const el = document.getElementById('infoResult');
+      el.textContent = 'Fetching...';
+      try {
+        const resp = await fetch('/cluster/info');
+        const data = await resp.json();
+        el.textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        el.textContent = 'Error: ' + err;
+      }
+    }
+
+    async function startStream() {
+      const el = document.getElementById('streamResult');
+      el.textContent = 'Starting...';
+      try {
+        const resp = await fetch('/stream/start', { method: 'POST' });
+        const text = await resp.text();
+        el.textContent = text;
+      } catch (err) {
+        el.textContent = 'Error: ' + err;
+      }
+    }
+
+    async function stopStream() {
+      const el = document.getElementById('streamResult');
+      el.textContent = 'Stopping...';
+      try {
+        const resp = await fetch('/stream/stop', { method: 'POST' });
+        const text = await resp.text();
+        el.textContent = text;
+      } catch (err) {
+        el.textContent = 'Error: ' + err;
+      }
+    }
+  </script>
+</body>
+
 </html>

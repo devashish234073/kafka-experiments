@@ -1,33 +1,68 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Consumer UI</title>
-    <style>body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;margin:16px;} pre{white-space:pre-wrap;}</style>
-  </head>
-  <body>
-    <h1>Kafka Consumer</h1>
-    <p>Last messages (most recent first):</p>
-    <div id="messages">Loading...</div>
 
-    <script>
-      async function fetchMessages() {
-        try {
-          const resp = await fetch('/messages');
-          const data = await resp.json();
-          const el = document.getElementById('messages');
-          if (!data || data.length === 0) {
-            el.textContent = 'No messages yet';
-            return;
-          }
-          el.innerHTML = data.map(m => '<pre>' + m + '</pre>').join('\n');
-        } catch (err) {
-          document.getElementById('messages').textContent = 'Error: ' + err;
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Consumer UI</title>
+  <style>
+    body {
+      font-family: system-ui, Segoe UI, Roboto, Helvetica, Arial;
+      margin: 16px;
+    }
+
+    pre {
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Kafka Consumer</h1>
+
+  <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 20px;">
+    <h2>Live Dashboard</h2>
+    <p>Total Received: <strong id="total">0</strong></p>
+    <p>Lost Messages: <strong id="lost" style="color:red">0</strong></p>
+  </div>
+
+  <p>Last messages (most recent first):</p>
+  <div id="messages">Loading...</div>
+
+  <script>
+    async function fetchMessages() {
+      try {
+        const resp = await fetch('/messages');
+        const data = await resp.json();
+        const el = document.getElementById('messages');
+        if (!data || data.length === 0) {
+          el.textContent = 'No messages yet';
+          return;
         }
+        el.innerHTML = data.map(m => '<pre>' + m + '</pre>').join('\n');
+      } catch (err) {
+        document.getElementById('messages').textContent = 'Error: ' + err;
       }
+    }
+
+    async function fetchStats() {
+      try {
+        const resp = await fetch('/stats');
+        const data = await resp.json();
+        document.getElementById('total').textContent = data.totalReceived;
+        document.getElementById('lost').textContent = data.lostMessages;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    fetchMessages();
+    fetchStats();
+    setInterval(() => {
       fetchMessages();
-      setInterval(fetchMessages, 3000);
-    </script>
-  </body>
+      fetchStats();
+    }, 1000);
+  </script>
+</body>
+
 </html>
