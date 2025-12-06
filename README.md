@@ -23,6 +23,13 @@ This is how it looks for one of the broker:
 
 <img width="917" height="820" alt="image" src="https://github.com/user-attachments/assets/a7faf640-f882-4dd5-8efb-3ae83dfc066d" />
 
+Update: 6th Dec 2025:
+
+Added ClusterController to get cluster status:
+
+<img width="1602" height="964" alt="image" src="https://github.com/user-attachments/assets/2f673e8c-2a51-4536-ae94-65f872b41865" />
+
+
 
 
 
