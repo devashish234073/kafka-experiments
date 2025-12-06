@@ -4,18 +4,41 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Producer UI</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .section { margin-top: 20px; border: 1px solid #ccc; padding: 10px; border-radius: 5px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
   </head>
   <body>
     <h1>Kafka Producer</h1>
-    <form id="sendForm">
-      <input type="text" id="msg" placeholder="Message" size="60" />
-      <button type="submit">Send</button>
-    </form>
-    <pre id="result"></pre>
+    
+    <div class="section">
+        <h2>Send Message</h2>
+        <form id="sendForm">
+          <input type="text" id="msg" placeholder="Message" size="60" />
+          <button type="submit">Send</button>
+        </form>
+        <pre id="result"></pre>
+    </div>
+
+    <div class="section">
+        <h2>Cluster Health</h2>
+        <button onclick="checkHealth()">Check Health</button>
+        <pre id="healthResult"></pre>
+    </div>
+
+    <div class="section">
+        <h2>Cluster Info</h2>
+        <button onclick="getClusterInfo()">Get Info</button>
+        <pre id="infoResult"></pre>
+    </div>
 
     <script>
       const form = document.getElementById('sendForm');
       const result = document.getElementById('result');
+      
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const msg = document.getElementById('msg').value;
@@ -28,6 +51,30 @@
           result.textContent = 'Error: ' + err;
         }
       });
+
+      async function checkHealth() {
+          const el = document.getElementById('healthResult');
+          el.textContent = 'Checking...';
+          try {
+              const resp = await fetch('/cluster/health');
+              const data = await resp.json();
+              el.textContent = JSON.stringify(data, null, 2);
+          } catch (err) {
+              el.textContent = 'Error: ' + err;
+          }
+      }
+
+      async function getClusterInfo() {
+          const el = document.getElementById('infoResult');
+          el.textContent = 'Fetching...';
+          try {
+              const resp = await fetch('/cluster/info');
+              const data = await resp.json();
+              el.textContent = JSON.stringify(data, null, 2);
+          } catch (err) {
+              el.textContent = 'Error: ' + err;
+          }
+      }
     </script>
   </body>
 </html>
