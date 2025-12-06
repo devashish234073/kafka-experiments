@@ -35,6 +35,10 @@ It's using Kafka admin:
 
 It automatcally gets the broker details from spring.kafka.bootstrap-servers property in application.properties
 
+This is spring-kafka's source repo --> https://github.com/spring-projects/spring-kafka.git
+These are all the classes in which this property is being used:
+<img width="815" height="877" alt="image" src="https://github.com/user-attachments/assets/d7b50dbf-29ee-49ac-9fa0-dbcb358aeecc" />
+
 
 
 
