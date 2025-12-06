@@ -37,7 +37,9 @@ It automatcally gets the broker details from spring.kafka.bootstrap-servers prop
 
 This is spring-kafka's source repo --> https://github.com/spring-projects/spring-kafka.git
 These are all the classes in which this property is being used:
-<img width="815" height="877" alt="image" src="https://github.com/user-attachments/assets/d7b50dbf-29ee-49ac-9fa0-dbcb358aeecc" />
+
+<img width="1698" height="817" alt="image" src="https://github.com/user-attachments/assets/80c8d04b-ca60-497b-a8bc-2f39e3cae8f6" />
+
 
 
 
