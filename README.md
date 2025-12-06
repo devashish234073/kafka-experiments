@@ -29,6 +29,13 @@ Added ClusterController to get cluster status:
 
 <img width="1602" height="964" alt="image" src="https://github.com/user-attachments/assets/2f673e8c-2a51-4536-ae94-65f872b41865" />
 
+It's using Kafka admin:
+
+<img width="1036" height="727" alt="image" src="https://github.com/user-attachments/assets/4b063a06-643d-4cb5-ad13-6f7fcf0b4757" />
+
+It automatcally gets the broker details from spring.kafka.bootstrap-servers property in application.properties
+
+
 
 
 
