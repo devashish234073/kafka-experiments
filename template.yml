@@ -114,7 +114,7 @@ Resources:
     Properties:
       LaunchTemplateData:
         ImageId: ami-0d176f79571d18a8f
-        InstanceType: t3.small
+        InstanceType: t3.medium
         KeyName: !Ref KeyName
         SecurityGroupIds: [!Ref KafkaSG]
         UserData:
@@ -162,7 +162,7 @@ Resources:
     Properties:
       LaunchTemplateData:
         ImageId: ami-0d176f79571d18a8f
-        InstanceType: t3.small
+        InstanceType: t3.medium
         KeyName: !Ref KeyName
         SecurityGroupIds: [!Ref KafkaSG]
         UserData:
@@ -209,7 +209,7 @@ Resources:
     Properties:
       LaunchTemplateData:
         ImageId: ami-0d176f79571d18a8f
-        InstanceType: t3.small
+        InstanceType: t3.medium
         KeyName: !Ref KeyName
         SecurityGroupIds: [!Ref KafkaSG]
         UserData:
@@ -299,7 +299,7 @@ Resources:
     Type: AWS::EC2::Instance
     DependsOn: Broker1
     Properties:
-      InstanceType: t3.small
+      InstanceType: t3.medium
       KeyName: !Ref KeyName
       ImageId: ami-0d176f79571d18a8f
       SubnetId: !Ref MyPublicSubnet
@@ -339,7 +339,7 @@ Resources:
     Type: AWS::EC2::Instance
     DependsOn: Broker1
     Properties:
-      InstanceType: t3.small
+      InstanceType: t3.medium
       KeyName: !Ref KeyName
       ImageId: ami-0d176f79571d18a8f
       SubnetId: !Ref MyPublicSubnet
